@@ -16,53 +16,85 @@ type DiffPart = {
   added?: boolean;
   removed?: boolean;
   value: string;
+  count?: number;
 };
 
-function groupDiffParts(diff: DiffPart[]): DiffPart[] {
-  if (diff.length === 0) return [];
+type GroupedDiff = {
+  type: "unchanged" | "replacement";
+  removed?: string;
+  added?: string;
+  value?: string;
+};
 
-  const grouped: DiffPart[] = [];
-  let buffer: DiffPart | null = null;
+function groupReplacements(diff: DiffPart[]): GroupedDiff[] {
+  const result: GroupedDiff[] = [];
+  let i = 0;
 
-  for (const part of diff) {
-    if (part.added || part.removed) {
-      if (
-        buffer &&
-        buffer.added === part.added &&
-        buffer.removed === part.removed
-      ) {
-        // Same change type as buffer: merge text
-        buffer.value += part.value;
-      } else {
-        // Push previous buffer if exists
-        if (buffer) grouped.push(buffer);
-        // Start new buffer
-        buffer = { ...part };
+  while (i < diff.length) {
+    const part = diff[i];
+
+    // Case: unchanged
+    if (!part.added && !part.removed) {
+      result.push({ type: "unchanged", value: part.value });
+      i++;
+      continue;
+    }
+
+    // Case: start of replacement
+    if (part.removed) {
+      let removedText = part.value;
+      let addedText = "";
+      i++;
+
+      // scan ahead: collect interleaved added/removed and optional short unchanged parts
+      while (i < diff.length) {
+        const next = diff[i];
+
+        if (next?.removed) {
+          removedText += next.value;
+        } else if (next?.added) {
+          addedText += next.value;
+        } else if (!next.added && !next.removed && next.value.trim().length <= 5) {
+          // allow small unchanged fillers like " ", "the ", etc.
+          removedText += next.value;
+          addedText += next.value;
+        } else {
+          break;
+        }
+
+        i++;
       }
-    } else {
-      // Part is unchanged
-      if (buffer) {
-        grouped.push(buffer);
-        buffer = null;
-      }
-      grouped.push(part);
+
+      result.push({
+        type: "replacement",
+        removed: removedText,
+        added: addedText,
+      });
+    }
+
+    // Case: stray added not paired with a removal
+    else if (part.added) {
+      result.push({
+        type: "replacement",
+        removed: "",
+        added: part.value,
+      });
+      i++;
     }
   }
-  // Push leftover buffer
-  if (buffer) grouped.push(buffer);
 
-  return grouped;
+  return result;
 }
 
-  const diff = groupDiffParts(rawDiff);
+  const diff = groupReplacements(rawDiff);
   console.log('rawdiff: ', rawDiff);
   console.log('diff: ', diff);
-  const getStyle = (part: typeof diff[number]) => {
-  if (part.added) return "diff-added";
-  if (part.removed) return "diff-removed";
-  if (/<.*?>/.test(part.value)) return "diff-format";
-  return "";
-};
+//   const getStyle = (part: typeof diff[number]) => {
+//   if (part.added) return "diff-added";
+//   if (part.removed) return "diff-removed";
+//   if (/<.*?>/.test(part.value)) return "diff-format";
+//   return "";
+// };
 
 
   return (
@@ -87,6 +119,19 @@ function groupDiffParts(diff: DiffPart[]): DiffPart[] {
     </div>
     <div className="whitespace-pre-wrap text-base">
       {diff.map((part, index) => {
+  if (part.type === "unchanged") {
+    return <span key={index}>{part.value}</span>;
+  }
+
+  return (
+    <span key={index}>
+      {part.removed && <span className="diff-removed">{part.removed}</span>}
+      {part.added && <span className="diff-added">{part.added}</span>}
+    </span>
+  );
+})}
+
+{/* {diff.map((part, index) => {
   const style = getStyle(part);
   return part.value.split('\n').map((line, i, arr) => (
     <React.Fragment key={`${index}-${i}`}>
@@ -104,7 +149,7 @@ function groupDiffParts(diff: DiffPart[]): DiffPart[] {
 
     </React.Fragment>
   ));
-})}
+})} */}
 
     </div>
     </>
