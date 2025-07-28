@@ -1,0 +1,39 @@
+.diff-added {
+  background-color: #d1fae5; /* Tailwind green-100 */
+  color: #065f46;           /* Tailwind green-800 */
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: inline-block; 
+}
+
+.diff-removed {
+  background-color: #fee2e2; /* Tailwind red-100 */
+  color: #991b1b;            /* Tailwind red-800 */
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: inline-block;
+  text-decoration: line-through;
+}
+
+.diff-format {
+  background-color: #dbeafe; /* Tailwind blue-100 */
+  color: #1e3a8a;            /* Tailwind blue-800 */
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.diff-break {
+  height: 20px; /* adjust height as needed */
+  margin: 1px 0; /* vertical spacing */
+  border-radius: 4px; /* rounded corners */
+  /* add any base styling you want */
+}
+
+.bg-green-100 {
+  background-color: #d4edda; /* light green */
+}
+
+.bg-red-100 {
+  background-color: #f8d7da; /* light red */
+}
